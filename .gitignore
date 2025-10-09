@@ -1,0 +1,20 @@
+# Scala/SBT
+target/
+project/target/
+*.class
+
+# IDE
+.metals/
+.bsp/
+.vscode/
+.idea/
+
+# Julia
+julia/.env
+db/
+
+# Proto
+proto/
+
+# OS
+.DS_Store

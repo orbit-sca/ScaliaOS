@@ -1,0 +1,706 @@
+openapi: 3.1.0
+info:
+  title: ScaliaOS API
+  description: |
+    AI Agent Framework with Blockchain Execution
+    
+    **Architecture:**
+    - Julia agents provide intelligence and decision-making
+    - Scala backend handles blockchain execution and infrastructure
+    
+  version: 0.2.0
+  contact:
+    name: ScaliaOS Team
+    url: https://github.com/your-org/scaliaos
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: /api/v1
+    description: Production API (versioned)
+
+tags:
+  - name: agents
+    description: Agent execution and management
+  - name: blockchain
+    description: Blockchain transaction operations
+  - name: tools
+    description: Tool execution for agents
+  - name: system
+    description: System health and status
+
+paths:
+  # ==================== Agent Endpoints ====================
+  
+  /agent/run:
+    post:
+      tags: [agents]
+      operationId: runAgent
+      summary: Execute an agent
+      description: |
+        Execute an agent with provided input. The agent returns a result
+        which may include blockchain transaction requests.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentExecutionRequest'
+            examples:
+              simple:
+                summary: Simple agent execution
+                value:
+                  agentId: "momentum_trader"
+                  input:
+                    token: "ETH"
+                    action: "analyze"
+              withContext:
+                summary: Agent with conversation context
+                value:
+                  agentId: "trading_assistant"
+                  input:
+                    message: "Should I buy ETH now?"
+                  sessionId: "session-123"
+                  context:
+                    previousDecision: "hold"
+      responses:
+        '200':
+          description: Agent executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentExecutionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AgentNotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /agent/stream:
+    post:
+      tags: [agents]
+      operationId: streamAgent
+      summary: Execute agent with streaming response
+      description: Execute an agent and stream the response tokens in real-time
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentExecutionRequest'
+      responses:
+        '200':
+          description: Streaming response
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-sent events stream
+
+  /agent/list:
+    get:
+      tags: [agents]
+      operationId: listAgents
+      summary: List available agents
+      description: Get a list of all registered agents with their capabilities
+      responses:
+        '200':
+          description: List of agents
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AgentMetadata'
+
+  /agent/{agentId}/status:
+    get:
+      tags: [agents]
+      operationId: getAgentStatus
+      summary: Get agent status
+      description: Check if an agent is available and get its current state
+      parameters:
+        - $ref: '#/components/parameters/AgentId'
+      responses:
+        '200':
+          description: Agent status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentStatus'
+        '404':
+          $ref: '#/components/responses/AgentNotFound'
+
+  # ==================== Blockchain Endpoints ====================
+
+  /blockchain/submit:
+    post:
+      tags: [blockchain]
+      operationId: submitTransaction
+      summary: Submit a blockchain transaction
+      description: |
+        Submit a blockchain transaction request. The transaction will be
+        queued, validated, and executed. Returns a request ID for tracking.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockchainTransactionRequest'
+            examples:
+              swap:
+                summary: Token swap
+                value:
+                  agentId: "momentum_trader"
+                  action: "swap"
+                  chain: "ethereum"
+                  params:
+                    fromToken: "USDC"
+                    toToken: "ETH"
+                    amount: "1000"
+                    slippage: "0.5"
+                  priority: "medium"
+              transfer:
+                summary: Token transfer
+                value:
+                  agentId: "payment_bot"
+                  action: "transfer"
+                  chain: "base"
+                  params:
+                    toAddress: "0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb"
+                    token: "USDC"
+                    amount: "100"
+                  priority: "high"
+      responses:
+        '202':
+          description: Transaction accepted and queued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionSubmitResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /blockchain/status/{requestId}:
+    get:
+      tags: [blockchain]
+      operationId: getTransactionStatus
+      summary: Get transaction status
+      description: Check the status of a submitted blockchain transaction
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          description: The transaction request ID
+          schema:
+            type: string
+          example: "tx-abc123def456"
+      responses:
+        '200':
+          description: Transaction status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionStatus'
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+
+  /blockchain/pending:
+    get:
+      tags: [blockchain]
+      operationId: listPendingTransactions
+      summary: List pending transactions
+      description: Get all transactions currently pending or in-progress
+      parameters:
+        - name: agentId
+          in: query
+          required: false
+          description: Filter by agent ID
+          schema:
+            type: string
+        - name: chain
+          in: query
+          required: false
+          description: Filter by blockchain
+          schema:
+            type: string
+          example: "ethereum"
+      responses:
+        '200':
+          description: List of pending transactions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TransactionStatus'
+                  count:
+                    type: integer
+
+  /blockchain/cancel/{requestId}:
+    post:
+      tags: [blockchain]
+      operationId: cancelTransaction
+      summary: Cancel a pending transaction
+      description: |
+        Attempt to cancel a pending transaction. Only works if transaction
+        hasn't been submitted to the blockchain yet.
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transaction cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Cannot cancel (already submitted)
+        '404':
+          $ref: '#/components/responses/TransactionNotFound'
+
+  # ==================== System Endpoints ====================
+
+  /health:
+    get:
+      tags: [system]
+      operationId: healthCheck
+      summary: Health check
+      description: Check if the system is running and healthy
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /status:
+    get:
+      tags: [system]
+      operationId: systemStatus
+      summary: System status
+      description: Get detailed system status including metrics
+      responses:
+        '200':
+          description: System status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStatus'
+
+# ==================== Components ====================
+
+components:
+  parameters:
+    AgentId:
+      name: agentId
+      in: path
+      required: true
+      description: The unique identifier of the agent
+      schema:
+        type: string
+      example: "momentum_trader"
+
+  schemas:
+    # ========== Agent Schemas ==========
+    
+    AgentExecutionRequest:
+      type: object
+      required:
+        - agentId
+        - input
+      properties:
+        agentId:
+          type: string
+          description: The ID of the agent to execute
+          example: "momentum_trader"
+        input:
+          type: object
+          additionalProperties: true
+          description: Input data for the agent (agent-specific format)
+          example:
+            token: "ETH"
+            action: "analyze"
+        sessionId:
+          type: string
+          description: Optional session ID for stateful agents
+          example: "session-abc123"
+        context:
+          type: object
+          additionalProperties: true
+          description: Optional context from previous interactions
+        options:
+          type: object
+          properties:
+            stream:
+              type: boolean
+              description: Enable streaming response
+            maxTokens:
+              type: integer
+              description: Maximum tokens for LLM response
+            temperature:
+              type: number
+              description: LLM temperature setting
+
+    AgentExecutionResponse:
+      type: object
+      required:
+        - agentId
+        - output
+        - executionTime
+      properties:
+        agentId:
+          type: string
+          example: "momentum_trader"
+        output:
+          type: object
+          additionalProperties: true
+          description: Agent's output/result
+        blockchainRequests:
+          type: array
+          description: Blockchain transactions requested by the agent
+          items:
+            $ref: '#/components/schemas/BlockchainTransactionRequest'
+        submittedTransactions:
+          type: array
+          description: Transaction request IDs that were submitted
+          items:
+            type: string
+          example: ["tx-abc123", "tx-def456"]
+        confidence:
+          type: number
+          format: float
+          description: Agent's confidence in the decision (0.0 to 1.0)
+          example: 0.85
+        executionTime:
+          type: integer
+          description: Execution time in milliseconds
+          example: 1250
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Any warnings generated during execution
+
+    AgentMetadata:
+      type: object
+      required:
+        - id
+        - name
+        - capabilities
+      properties:
+        id:
+          type: string
+          example: "momentum_trader"
+        name:
+          type: string
+          example: "Momentum Trading Agent"
+        description:
+          type: string
+          example: "Analyzes momentum indicators and executes trades"
+        capabilities:
+          type: array
+          items:
+            type: string
+          example: ["price_analysis", "risk_assessment", "trade_execution"]
+        supportedChains:
+          type: array
+          items:
+            type: string
+          example: ["ethereum", "base", "arbitrum"]
+        permissions:
+          type: object
+          properties:
+            maxTransactionValue:
+              type: number
+              example: 10000
+            allowedActions:
+              type: array
+              items:
+                type: string
+              example: ["swap", "transfer"]
+
+    AgentStatus:
+      type: object
+      properties:
+        agentId:
+          type: string
+        available:
+          type: boolean
+        state:
+          type: string
+          enum: ["ready", "busy", "error", "disabled"]
+        lastExecuted:
+          type: string
+          format: date-time
+        executionCount:
+          type: integer
+
+    # ========== Blockchain Schemas ==========
+
+    BlockchainTransactionRequest:
+      type: object
+      required:
+        - action
+        - chain
+        - params
+      properties:
+        agentId:
+          type: string
+          description: ID of the agent making the request
+          example: "momentum_trader"
+        action:
+          type: string
+          enum: ["swap", "transfer", "approve", "stake", "unstake", "claim"]
+          description: Type of blockchain action
+          example: "swap"
+        chain:
+          type: string
+          description: Target blockchain
+          example: "ethereum"
+          enum: ["ethereum", "base", "arbitrum", "optimism", "polygon"]
+        params:
+          type: object
+          additionalProperties: true
+          description: Action-specific parameters
+          example:
+            fromToken: "USDC"
+            toToken: "ETH"
+            amount: "1000"
+            slippage: "0.5"
+        priority:
+          type: string
+          enum: ["low", "medium", "high", "urgent"]
+          default: "medium"
+          description: Transaction priority (affects gas price)
+        maxGasPrice:
+          type: string
+          description: Maximum gas price in gwei
+          example: "50"
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Optional metadata for tracking
+
+    TransactionSubmitResponse:
+      type: object
+      required:
+        - requestId
+        - status
+      properties:
+        requestId:
+          type: string
+          description: Unique identifier for tracking this transaction
+          example: "tx-abc123def456"
+        status:
+          type: string
+          enum: ["queued", "validating"]
+          example: "queued"
+        message:
+          type: string
+          example: "Transaction queued for execution"
+        estimatedGas:
+          type: string
+          description: Estimated gas cost
+          example: "150000"
+
+    TransactionStatus:
+      type: object
+      required:
+        - requestId
+        - state
+        - createdAt
+      properties:
+        requestId:
+          type: string
+          example: "tx-abc123def456"
+        agentId:
+          type: string
+          example: "momentum_trader"
+        action:
+          type: string
+          example: "swap"
+        chain:
+          type: string
+          example: "ethereum"
+        state:
+          type: string
+          enum: 
+            - "queued"
+            - "validating"
+            - "approved"
+            - "submitting"
+            - "pending"
+            - "confirmed"
+            - "finalized"
+            - "failed"
+            - "cancelled"
+          example: "confirmed"
+        txHash:
+          type: string
+          description: Blockchain transaction hash (once submitted)
+          example: "0x1234567890abcdef..."
+        blockNumber:
+          type: integer
+          description: Block number (once confirmed)
+          example: 18234567
+        gasUsed:
+          type: string
+          example: "142358"
+        gasPrice:
+          type: string
+          example: "25.5"
+        error:
+          type: string
+          description: Error message if failed
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        confirmedAt:
+          type: string
+          format: date-time
+        attempts:
+          type: integer
+          description: Number of submission attempts
+          example: 1
+
+    # ========== System Schemas ==========
+
+    HealthStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: ["healthy", "degraded", "unhealthy"]
+          example: "healthy"
+        timestamp:
+          type: string
+          format: date-time
+        components:
+          type: object
+          properties:
+            database:
+              type: string
+              enum: ["up", "down"]
+            julia:
+              type: string
+              enum: ["up", "down"]
+            blockchain:
+              type: object
+              additionalProperties:
+                type: string
+                enum: ["up", "down"]
+
+    SystemStatus:
+      type: object
+      properties:
+        uptime:
+          type: integer
+          description: Uptime in seconds
+        version:
+          type: string
+          example: "0.2.0"
+        metrics:
+          type: object
+          properties:
+            totalAgentExecutions:
+              type: integer
+            totalTransactions:
+              type: integer
+            pendingTransactions:
+              type: integer
+            failedTransactions:
+              type: integer
+        chains:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              status:
+                type: string
+              latency:
+                type: integer
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: "AGENT_NOT_FOUND"
+        message:
+          type: string
+          example: "Agent 'unknown_agent' not found"
+        details:
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    AgentNotFound:
+      description: Agent not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "AGENT_NOT_FOUND"
+            message: "Agent not found"
+    
+    TransactionNotFound:
+      description: Transaction not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
