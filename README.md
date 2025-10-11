@@ -4,10 +4,12 @@
 ScaliaOS provides enterprise-grade JVM infrastructure for JuliaOS's AI agent framework through a type-safe execution platform built with Scala, ZIO, and Tapir. It implements a registry-factory-executor pattern to manage and route requests across multiple agent types—including LLM conversational agents, blockchain trading agents, and hybrid workflows. The platform bridges Scala with JuliaOS for high-performance compute while exposing agent capabilities through a RESTful API for execution, discovery, and status checking.
 
 # What It Does
-**ScaliaOS v0.2 - Hybrid Scala + Julia AI Agent Framework**
+**ScaliaOS v0.2 – Hybrid Scala + Julia Stack OS AI Agent Framework**
 
 ScaliaOS is a reactive, type-safe framework that bridges Scala's powerful JVM ecosystem with Julia's high-performance computing capabilities.
 Built on ZIO for functional effects and Tapir for HTTP APIs, it provides a robust platform for deploying AI agents that leverage Julia's numerical computing strengths alongside Scala's enterprise-grade reliability.
+
+Powered by the JuliaOS stack, ScaliaOS integrates Julia’s modular agent system, dataflow runtime, and scientific libraries—enabling seamless interoperability between Julia-based analytical modules and Scala’s distributed backend. This hybrid architecture allows developers to build intelligent, high-performance agent systems that unify data science, AI, and systems engineering in one cohesive environment.
 
 ## Current Status
 
