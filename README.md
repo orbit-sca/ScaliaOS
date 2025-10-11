@@ -54,20 +54,25 @@ Currently Implements:
 ### ⚙️ Setup
 
 1. Clone the Repository
+   
 bash
 ```
 git clone https://github.com/your-username/scaliaOS.git
 cd scaliaOS
 ```
+
 3. Initialize Julia Environment
+   
 bash
 ```
 cd julia
 julia --project=@. -e 'using Pkg; Pkg.instantiate()'
 cd ..
 ```
+
 5. Configure Environment Variables
 Create a .env file in the julia/ directory:
+
 bash
 ```
 # For OpenAI
@@ -83,6 +88,7 @@ Note: Use the .env.example file as a template. The gpt-4o-mini model is recommen
 
 ### 🚀 Running the Server
 Start the ZIO HTTP server:
+
 bash
 ```
 sbt "server/run"
@@ -117,6 +123,7 @@ The server will listen on port 8000 and be ready to process agent requests.
 
 
 ### Test 1: List All Agents
+
 bash
 ```
 http GET localhost:8000/agent/list
@@ -125,6 +132,7 @@ What this does: Shows all registered agents and their configurations.
 Expected output: JSON array with agent details (id, type, capabilities, etc.)
 
 ### Test 2: Get Agent Status
+
 bash
 ```
 http GET localhost:8000/agent/llm-chat-gpt4/status
@@ -133,6 +141,7 @@ What this does: Retrieves configuration details for a specific agent.
 Expected output: Agent configuration including type, capabilities, and timeout settings.
 
 ### Test 3: LLM Chat Agent (Live - Requires API Key)
+
 bash
 ```
 echo '{"agentId":"llm-chat-gpt4","input":{"message":"What is ZIO?"}}' | http POST localhost:8000/agent/run
@@ -158,6 +167,7 @@ Julia dependencies aren't installed
 
 
 ### Test 4: Solana Trading Agent (Mock)
+
 bash
 ```
 echo '{"agentId":"solana-trading","input":{"action":"analyze-market","symbol":"SOL/USDC"}}' | http POST localhost:8000/agent/run
@@ -197,6 +207,7 @@ Note: Mock mode returns minimal success responses. To enable real blockchain fun
 
 
 ### Test 5: AI Trader Agent (Mock)
+
 bash
 ```
 echo '{"agentId":"ai-trader","input":{"operation":"analyze-market","symbol":"SOL/USDC","strategy":"momentum"}}' | http POST localhost:8000/agent/run
@@ -216,6 +227,7 @@ json{
 }
 ```
 Other AI trader commands:
+
 bash
 ```
 # Auto-trade (mock)
@@ -239,6 +251,7 @@ This is expected behavior. Mock agents validate the request format but don't per
 
 ### 🎯 Quick Test Script
 Create `test.sh`:
+
 bash
 ```
 #!/bin/bash
