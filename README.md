@@ -273,7 +273,7 @@ Run with: `chmod +x test.sh && ./test.sh`
 
 ## 👩🛠️ Project Structure 
 ```
-ScaliaOS-private-v.0.2-main/
+ScaliaOS/
 │
 ├── 📜 api/                                         # API specifications and documentation
 │   └── spec/
