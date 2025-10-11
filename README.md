@@ -42,6 +42,7 @@ Currently Implements:
 - TestNet Blockchain Integration
 - Live Blockchain Integration
 - Enhanced monitoring and metrics
+- Frontend connection built in scala
 
 ## Quick Start
 
