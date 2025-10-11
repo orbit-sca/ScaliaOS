@@ -254,3 +254,140 @@ echo "3. Trading agent (mock):"
 echo '{"agentId":"solana-trading","input":{"action":"analyze-market","symbol":"SOL/USDC"}}' | http POST localhost:8000/agent/run
 ```
 Run with: `chmod +x test.sh && ./test.sh`
+
+
+## 👩🛠️ Project Structure 
+```
+ScaliaOS-private-v.0.2-main/
+│
+├── 📜 api/                                         # API specifications and documentation
+│   └── spec/
+│       └── openapi.yaml                           # OpenAPI 3.1 spec for REST endpoints
+│
+├── 🔬 julia/                                      # Julia agent runtime (high-performance compute)
+│   ├── config/                                    # Configuration management
+│   │   ├── agents.toml                          # Agent registry and capabilities
+│   │   ├── config.example.toml                  # Template configuration with examples
+│   │   ├── config.jl                            # Julia config loader and validator  
+│   │   └── config.toml                          # Main configuration (API keys, endpoints)
+│   │
+│   ├── examples/                                  # Working agent implementations
+│   │   ├── basic_agent.jl                       # Simple LLM chat agent with streaming
+│   │   ├── plan_execute_agent.jl                # Multi-step planning and execution
+│   │   ├── run_agents.jl                        # Agent orchestration demo
+│   │   ├── streaming_chat_agent.jl              # Real-time streaming responses  
+│   │   └── trading_agent.jl                     # Blockchain trading strategy agent
+│   │
+│   ├── src/                                       # Core Julia modules
+│   │   ├── agents/                              # Agent lifecycle and orchestration
+│   │   │   ├── AgentCore.jl                    # Base agent abstractions and interfaces
+│   │   │   ├── AgentMetrics.jl                 # Performance monitoring and analytics
+│   │   │   ├── AgentMonitor.jl                 # Real-time agent health monitoring
+│   │   │   ├── Agents.jl                       # Main agent module and exports
+│   │   │   ├── Config.jl                       # Agent-specific configuration
+│   │   │   ├── LLMIntegration.jl               # LLM provider integration (OpenAI, Groq)
+│   │   │   ├── Persistence.jl                  # Agent state persistence layer
+│   │   │   └── PlanAndExecute.jl               # Plan-and-execute agent pattern
+│   │   │
+│   │   ├── bridge/                              # Scala-Julia communication layer
+│   │   │   ├── ResponseModels.jl               # Structured response formats
+│   │   │   └── ScalaClient.jl                  # Client for calling Scala services
+│   │   │
+│   │   ├── framework/                           # Core framework utilities
+│   │   │   ├── BlockchainRequests.jl           # Blockchain transaction builders
+│   │   │   ├── JuliaOSFramework.jl             # Main framework initialization
+│   │   │   ├── LlmHandlers.jl                  # LLM request/response handlers
+│   │   │   ├── SwarmHandlers.jl                # Swarm intelligence handlers
+│   │   │   └── Utils.jl                        # Common utility functions
+│   │   │
+│   │   ├── risk/                                # Risk management module
+│   │   │   └── RiskManager.jl                  # Position sizing, risk limits
+│   │   │
+│   │   ├── runtime/                             # Agent execution runtime
+│   │   │   ├── AgentRuntime.jl                 # Agent execution environment
+│   │   │   └── BlockchainAgent.jl              # Blockchain-specific agent runtime
+│   │   │
+│   │   ├── storage/                             # Data persistence layer
+│   │   │   ├── local_storage.jl                # File-based storage backend
+│   │   │   ├── storage_interface.jl            # Abstract storage interface
+│   │   │   └── Storage.jl                      # Main storage module
+│   │   │
+│   │   ├── strategies/                          # Trading and decision strategies
+│   │   │   ├── MeanReversionImpl.jl            # Mean reversion trading strategy
+│   │   │   ├── MovingAverageStrategy.jl        # MA crossover strategies
+│   │   │   ├── RiskManagement.jl               # Portfolio risk management
+│   │   │   ├── TradeLogger.jl                  # Trade execution logging
+│   │   │   └── TradingStrategy.jl              # Base strategy interface
+│   │   │
+│   │   ├── swarm/                               # Swarm intelligence algorithms
+│   │   │   ├── algorithms/                     # Optimization algorithms
+│   │   │   │   ├── de.jl                      # Differential Evolution
+│   │   │   │   ├── ga.jl                      # Genetic Algorithm
+│   │   │   │   └── pso.jl                     # Particle Swarm Optimization
+│   │   │   ├── SwarmBase.jl                   # Base swarm abstractions
+│   │   │   └── Swarms.jl                      # Swarm orchestration
+│   │   │
+│   │   ├── entrypoint.jl                        # Main Julia entry point
+│   │   ├── juliaos_server.jl                    # Julia HTTP server (optional)
+│   │   ├── JuliaOS.jl                           # JuliaOS compatibility layer
+│   │   └── server.jl                            # Server utilities
+│   │
+│   ├── test/                                     # Julia test suites
+│   │   └── [test directories]                   # Comprehensive test coverage
+│   │
+│   ├── .env.example                              # Environment variable template
+│   ├── .gitignore                                # Julia-specific ignores
+│   ├── DEVELOPMENT.md                            # Julia development guide
+│   ├── package.json                              # Optional Node.js dependencies
+│   └── Project.toml                              # Julia package manifest
+│
+├── 🏛️ project/                                    # SBT build configuration
+│   ├── project/                                  # Nested SBT plugins
+│   │   └── [nested project files]              # Build plugin configurations
+│   ├── target/                                   # SBT build artifacts (gitignored)
+│   │   └── [build artifacts]                   
+│   ├── build.properties                         # SBT version specification
+│   └── plugins.sbt                              # SBT plugin dependencies
+│
+├── ⚡ server/                                      # Scala backend (ZIO + Tapir)
+│   ├── src/
+│   │   └── main/
+│   │       └── scala/
+│   │           └── com/
+│   │               └── scaliaos/
+│   │                   └── app/
+│   │                       ├── bridge/          # Julia-Scala integration
+│   │                       │   └── JuliaBridge.scala     # Process management, JSON encoding
+│   │                       │
+│   │                       ├── http/            # HTTP API layer
+│   │                       │   └── endpoints/
+│   │                       │       └── AgentExecutionEndpoint.scala  # REST endpoints
+│   │                       │
+│   │                       ├── models/          # Domain models and types
+│   │                       │   ├── AgentModels.scala      # Agent request/response models
+│   │                       │   ├── AgentTypes.scala       # Agent type definitions
+│   │                       │   └── BlockchainModels.scala # Blockchain transaction models
+│   │                       │
+│   │                       ├── services/        # Business logic layer
+│   │                       │   ├── executors/  # Agent execution strategies
+│   │                       │   │   └── [LLM, Blockchain, Hybrid executors]
+│   │                       │   ├── AgentExecutorFactory.scala  # Factory pattern router
+│   │                       │   ├── AgentRegistry.scala         # Agent discovery service
+│   │                       │   └── BlockchainService.scala     # Blockchain operations
+│   │                       │
+│   │                       ├── test/           # Integration tests
+│   │                       │   └── AgentTask.scala        # Agent test scenarios
+│   │                       │
+│   │                       └── Main.scala      # Server entry point (ZIO HTTP)
+│   │
+│   └── target/                                   # Scala build artifacts (gitignored)
+│       └── [build artifacts]
+│
+├── target/                                        # Root build artifacts (gitignored)
+│   └── [root build artifacts]
+│
+├── .gitignore                                     # Git ignore patterns
+├── build.sbt                                      # Root Scala build definition
+├── LICENSE                                        # Project license
+└── README.md                                      # Project documentation
+```
