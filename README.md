@@ -1,7 +1,7 @@
 ![scalia](https://github.com/user-attachments/assets/eacb766f-a772-4ab4-a1fd-7d56228f22e7)
 # ScaliaOS
 
-ScaliaOS provides enterprise-grade JVM infrastructure for JuliaOS's AI agent framework through a type-safe execution platform built with Scala, ZIO, and Tapir. It implements a registry-factory-executor pattern to manage and route requests across multiple agent types—including LLM conversational agents, blockchain trading agents, and hybrid workflows. The platform bridges Scala with Julia for high-performance compute while exposing agent capabilities through a RESTful API for execution, discovery, and status checking.
+ScaliaOS provides enterprise-grade JVM infrastructure for JuliaOS's AI agent framework through a type-safe execution platform built with Scala, ZIO, and Tapir. It implements a registry-factory-executor pattern to manage and route requests across multiple agent types—including LLM conversational agents, blockchain trading agents, and hybrid workflows. The platform bridges Scala with JuliaOS for high-performance compute while exposing agent capabilities through a RESTful API for execution, discovery, and status checking.
 
 # What It Does
 **ScaliaOS v0.2 - Hybrid Scala + Julia AI Agent Framework**
